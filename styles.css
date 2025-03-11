@@ -1,66 +1,50 @@
-body {
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #111;
-    cursor: url('custom-cursor.png'), auto;
-    font-family: Arial, sans-serif;
-    color: white;
+async function loadCSV() {
+    const response = await fetch('data.csv');
+    const text = await response.text();
+    const rows = text.split("\n").slice(1);
+    return rows.map(row => {
+        const [Name, Class, Faction, Character, Potential, Atk, Def] = row.split(",");
+        return { Name, Class, Faction, Character, Potential, Atk, Def };
+    });
 }
 
-#container {
-    position: relative;
-    text-align: center;
-}
+document.addEventListener("DOMContentLoaded", async () => {
+    const data = await loadCSV();
+    const list = document.getElementById("player-list");
+    const display = document.getElementById("display");
 
-#ui-background {
-    max-width: 100%;
-    height: auto;
-}
+    data.forEach((player, index) => {
+        let card = document.createElement("div");
+        card.classList.add("player-card");
+        card.style.background = getRarityColor(player.Potential);
+        
+        let img = document.createElement("img");
+        img.src = player.Character;
+        img.classList.add("card-img");
 
-#player-list {
-    position: absolute;
-    right: 20px;
-    top: 50px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
+        card.appendChild(img);
+        card.onclick = () => {
+            display.innerHTML = `
+                <div class='card' style='background: ${getRarityColor(player.Potential)};'>
+                    <img src='${player.Character}' class='character-img'>
+                    <h2>${player.Name}</h2>
+                    <p>Class: ${player.Class}</p>
+                    <p>Faction: ${player.Faction}</p>
+                    <p>Potential: ${player.Potential}</p>
+                    <p>Attack: ${player.Atk}</p>
+                    <p>Defense: ${player.Def}</p>
+                </div>
+            `;
+        };
+        list.appendChild(card);
+    });
+});
 
-button {
-    background-color: #444;
-    color: white;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: background 0.3s;
-}
-
-button:hover {
-    background-color: #666;
-}
-
-#display {
-    position: absolute;
-    left: 20px;
-    top: 50px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 15px;
-    border-radius: 10px;
-}
-
-.card {
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-}
-
-.character-img {
-    max-width: 100px;
-    display: block;
-    margin: 0 auto;
+function getRarityColor(potential) {
+    switch (potential.trim().toLowerCase()) {
+        case 'legendary': return 'gold';
+        case 'epic': return 'purple';
+        case 'rare': return 'blue';
+        default: return 'gray';
+    }
 }
